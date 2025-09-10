@@ -378,6 +378,7 @@
       border: 5px solid #e0e0e0;
       font-size: clamp(20px, 5vw, 24px);
       line-height: 1.6;
+      position: relative;
     }
     .about-content p:first-child {
       font-weight: bold;
@@ -477,6 +478,7 @@
 
   <div id="about-modal">
     <div class="about-content">
+      <button id="about-close-btn" class="quiz-close-btn">&times;</button>
       <p>Programmed by Sas!<br>Only for Gly!</p>
     </div>
   </div>
@@ -749,7 +751,7 @@ class PaperDragger {
         this.hasMoved = true;
     }
 
-    // UPDATE 3: Boundary checks during movement
+    // Boundary checks during movement
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const cardWidth = this.paper.offsetWidth;
@@ -766,7 +768,7 @@ class PaperDragger {
     if (!this.isDragging) return;
     
     if (!this.hasMoved) {
-      // UPDATE 2: SINGLE/DOUBLE TAP LOGIC
+      // SINGLE/DOUBLE TAP LOGIC
       if (this.isTouchEvent) {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - this.lastTap;
@@ -785,7 +787,7 @@ class PaperDragger {
     this.isDragging = false;
     this.paper.classList.remove('grabbing');
     
-    // UPDATE 3: Final boundary check as a safeguard
+    // Final boundary check as a safeguard
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const cardWidth = this.paper.offsetWidth;
@@ -904,23 +906,31 @@ document.addEventListener('DOMContentLoaded', () => {
     new PaperDragger(paper, index);
   });
   
+  // Quiz Modal Logic
   document.getElementById('random-q-btn').addEventListener('click', showRandomQuestion);
   quizCloseBtn.addEventListener('click', closeQuizModal);
   quizModal.addEventListener('click', (e) => {
     if(e.target === quizModal) closeQuizModal();
   });
 
+  // About Modal Logic
   const aboutBtn = document.getElementById('about-btn');
   const aboutModal = document.getElementById('about-modal');
+  const aboutCloseBtn = document.getElementById('about-close-btn');
+
+  const closeAboutModal = () => aboutModal.classList.remove('show');
+
   aboutBtn.addEventListener('click', () => {
     aboutModal.classList.add('show');
   });
+  aboutCloseBtn.addEventListener('click', closeAboutModal);
   aboutModal.addEventListener('click', (e) => {
     if (e.target === aboutModal) {
-      aboutModal.classList.remove('show');
+      closeAboutModal();
     }
   });
 
+  // Loading Screen and Card Animation
   window.addEventListener("load", () => {
     document.body.classList.add("loaded");
     const papers = Array.from(document.querySelectorAll('.paper'));
