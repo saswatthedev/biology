@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>General Biology 1 Study Cards 🔬</title>
+
+  <!-- THISSSSSS IS THEEE meta Tags for SEO and Sharing -->
+  <meta name="description" content="An interactive and fun way to learn about General Biology 1 with flipping and draggable flash cards.">
+  <meta property="og:title" content="General Biology 1 Study Cards 🔬">
+  <meta property="og:description" content="Learn about cell biology with fun, interactive flash cards!">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="General Biology 1 Study Cards 🔬">
+  <meta name="twitter:description" content="Learn about cell biology with fun, interactive flash cards.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --card-width: 280px;
+      --card-height: 180px;
+      --cute-font: 'Patrick Hand', cursive;
+      --text-color: #003366;
+      --correct-color: #28a745;
+      --wrong-color: #dc3545;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image: url("https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA5L3Jhd3BpeGVsb2ZmaWNlNl9icm93bl9ncmlkX21hdGhfcGFwZXJfdGV4dHVyZV9faXNvbGF0ZWRfb25fYV93aF82YmQ2Mjg2OC1hZDA2LTQ0NDItOWUyYS05NjkzZjZjNjBjOTZfMS5qcGc.jpg");
+      background-size: 1000px;
+      background-position: center center;
+      margin: 0;
+      overflow: hidden;
+      font-family: var(--cute-font);
+      color: var(--text-color);
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    #card-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Card Structure & Flip Animation */
+    .paper {
+      width: var(--card-width);
+      height: var(--card-height);
+      position: absolute;
+      cursor: grab;
+      transform-origin: center center;
+      opacity: 0;
+      scale: 0.8;
+      transition: opacity 0.5s ease-out, scale 0.5s ease-out;
+      pointer-events: none;
+      perspective: 1000px; /* For 3D flip effect */
+    }
+
+    .paper.show {
+      opacity: 1;
+      scale: 1;
+      pointer-events: auto;
+    }
+    
+    .paper.grabbing {
+      cursor: grabbing;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      box-shadow: 1px 15px 20px 0px rgba(0,0,0,0.25);
+      border-radius: 10px;
+    }
+
+    .paper.is-flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      background-image: url("https://img.freepik.com/free-photo/design-space-paper-textured-background_53876-147801.jpg?semt=ais_hybrid&w=740");
+      background-size: 500px;
+      border-radius: 10px;
+
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    .paper p {
+      margin: 0;
+      text-align: center;
+      pointer-events: none;
+      line-height: 1.4;
+    }
+    
+    .card-front p {
+      font-size: clamp(17px, 4vw, 20px);
+      font-weight: bold;
+    }
+    
+    .card-back p {
+      font-size: clamp(16px, 4vw, 19px);
+    }
+
+    /* --- Buttons --- */
+    .button-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 10000;
+    }
+
+    #random-q-btn, #about-btn {
+      padding: 12px 24px;
+      font-family: var(--cute-font);
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    #random-q-btn:hover, #about-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    
+    #random-q-btn:active, #about-btn:active {
+      transform: translateY(1px);
+    }
+
+    #random-q-btn {
+      background-color: #ffc107;
+      color: #333;
+      border: 2px solid #333;
+    }
+
+    #about-btn {
+      background-color: #17a2b8; /* Cyan color */
+      color: white;
+      border: 2px solid #107281;
+    }
+
+    /* --- Modal Base --- */
+    #quiz-modal, #about-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    #quiz-modal.show, #about-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    /* --- IMPROVED Quiz Modal --- */
+    .quiz-content {
+        background-image: url("https://www.psdgraphics.com/wp-content/uploads/2022/01/white-math-paper-texture.jpg");
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        width: 90%;
+        max-width: 550px;
+        text-align: center;
+        border: 5px solid #e0e0e0;
+        position: relative;
+        transform: scale(0.95);
+        transition: transform 0.3s ease-out;
+    }
+    #quiz-modal.show .quiz-content {
+        transform: scale(1);
+    }
+    .quiz-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px dashed rgba(0, 51, 102, 0.2);
+    }
+    .quiz-title {
+        margin: 0;
+        font-size: clamp(24px, 5vw, 28px);
+        color: var(--text-color);
+    }
+    .quiz-close-btn {
+        position: absolute;
+        top: -15px;
+        right: -10px;
+        background: #fff;
+        border: 2px solid #ccc;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #888;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        padding: 0;
+        transition: all 0.2s ease;
+    }
+    .quiz-close-btn:hover {
+        color: #333;
+        border-color: #333;
+        transform: rotate(90deg);
+    }
+    .quiz-question {
+        font-size: clamp(18px, 4vw, 22px);
+        margin-bottom: 25px;
+        line-height: 1.5;
+        color: #333;
+    }
+    .quiz-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .quiz-option {
+        padding: 14px;
+        border: 2px solid var(--text-color);
+        border-radius: 10px;
+        font-size: clamp(16px, 4vw, 18px);
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        background-color: #fff;
+        position: relative;
+    }
+    .quiz-option:hover {
+        background-color: rgba(0, 51, 102, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .quiz-options.answered .quiz-option {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    .quiz-options.answered .quiz-option:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    .quiz-options.answered .quiz-option.correct,
+    .quiz-options.answered .quiz-option.wrong {
+        opacity: 1;
+        transform: scale(1.03);
+    }
+    .quiz-option.correct {
+        background-color: var(--correct-color);
+        color: white;
+        border-color: #1e7e34;
+    }
+    .quiz-option.wrong {
+        background-color: var(--wrong-color);
+        color: white;
+        border-color: #b21f2d;
+    }
+    .quiz-option.correct::after {
+        content: '✔';
+        position: absolute;
+        right: 15px;
+        font-weight: bold;
+    }
+    .quiz-option.wrong::after {
+        content: '✖';
+        position: absolute;
+        right: 15px;
+        font-weight: bold;
+    }
+    .quiz-feedback {
+        margin-top: 25px;
+        font-size: 18px;
+        min-height: 25px;
+        line-height: 1.5;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .quiz-feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .quiz-feedback-result {
+        font-weight: bold;
+        font-size: 20px;
+    }
+    .quiz-feedback-result.correct { color: var(--correct-color); }
+    .quiz-feedback-result.wrong { color: var(--wrong-color); }
+    .quiz-feedback-reason {
+        font-size: 17px;
+        color: #555;
+        margin-top: 8px;
+        background: rgba(0,0,0,0.04);
+        padding: 10px;
+        border-radius: 8px;
+    }
+    .quiz-actions {
+        margin-top: 20px;
+        min-height: 50px;
+    }
+    #next-question-btn {
+        padding: 12px 28px;
+        font-family: var(--cute-font);
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 30px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background-color: #ffc107;
+        color: #333;
+        border: 2px solid #333;
+        animation: pop-in 0.5s ease-out;
+    }
+    #next-question-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    @keyframes pop-in {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* --- About Modal --- */
+    .about-content {
+      background-image: url("https://www.psdgraphics.com/wp-content/uploads/2022/01/white-math-paper-texture.jpg");
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      border: 5px solid #e0e0e0;
+      font-size: clamp(20px, 5vw, 24px);
+      line-height: 1.6;
+    }
+    .about-content p:first-child {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* Loading Screen */
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .loaded #loadingScreen {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .spinner {
+      border: 8px solid rgba(255, 255, 255, 0.2);
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spinner + p {
+      margin-top: 25px;
+      font-size: 16px;
+      color: #f0f0f0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      :root {
+        --card-width: 240px;
+        --card-height: 160px;
+      }
+      #random-q-btn, #about-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+    }
+
+    @media (min-width: 600px) {
+      .quiz-options {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Loading your study cards...</p>
+  </div>
+
+  <div id="card-container"></div>
+  
+  <div class="button-container">
+    <button id="about-btn">About!</button>
+    <button id="random-q-btn">Quiz!</button>
+  </div>
+
+  <div id="quiz-modal">
+    <div class="quiz-content">
+      <div class="quiz-header">
+        <h2 class="quiz-title">Pop Quiz! 💡</h2>
+        <button id="quiz-close-btn" class="quiz-close-btn">&times;</button>
+      </div>
+      <p class="quiz-question" id="quiz-question-text"></p>
+      <div class="quiz-options" id="quiz-options-container"></div>
+      <div class="quiz-feedback" id="quiz-feedback-container"></div>
+      <div class="quiz-actions" id="quiz-actions-container"></div>
+    </div>
+  </div>
+
+  <div id="about-modal">
+    <div class="about-content">
+      <p>Programmed by Sas!<br>Only for Gly!</p>
+    </div>
+  </div>
+
+<script>
+// --- DATA ---
+const flashcardData = [
+  // The first 3 cards will be the "Top Notes" that appear at the top on load
+  { 
+    note: "The Classical Cell Theory: The 3 essential rules that define all life on Earth.",
+    explanation: "Life has three main rules: 1. Everything alive is made of cells. 2. The cell is the smallest living thing. 3. Cells only come from other cells splitting in two.",
+    quizTitle: "The Classical Cell Theory",
+    quizReasoning: "These three principles are the foundation of biology, explaining what living things are and where they come from."
+  },
+  { 
+    note: "The Cell Membrane: A flexible lipid bilayer that acts as the cell's protective gatekeeper, controlling what comes in and what goes out.",
+    explanation: "This is the cell's squishy, smart skin! It acts like a bouncer at a club, deciding which molecules get to come in and which have to leave.",
+    quizTitle: "Cell Membrane",
+    quizReasoning: "Its main job is being 'selectively permeable', meaning it protects the cell while allowing necessary materials to pass through."
+  },
+  { 
+    note: "The Nucleus: The large organelle that acts as the cell's brain or control center because it holds all the genetic instructions (DNA).",
+    explanation: "The nucleus is the boss of the cell! It's like a tiny brain that holds the master blueprint (DNA) and tells all the other parts what to do.",
+    quizTitle: "Nucleus",
+    quizReasoning: "By containing the DNA, the nucleus is responsible for controlling all cell activities, including growth and reproduction."
+  },
+  // --- Microscope History ---
+  { 
+    note: "The very first microscope was invented around 1597 by a father-son team: Hans and Zacharias Janssen.",
+    explanation: "A long time ago, a dad and his son figured out that if you put two glass lenses together, you could make tiny things look huge! They started it all.",
+    quizTitle: "Hans & Zacharias Janssen",
+    quizReasoning: "These two Dutch lens-makers are credited with creating the first compound microscope, kicking off the age of microbiology."
+  },
+  { 
+    note: "Robert Hooke, an English scientist, was the first to observe and name 'cells' in 1665 after looking at a piece of cork.",
+    explanation: "This guy looked at cork with his microscope and saw a bunch of tiny, empty boxes. They reminded him of little rooms, so he called them 'cells'!",
+    quizTitle: "Robert Hooke",
+    quizReasoning: "Hooke is famous for coining the term 'cell.' He didn't see living things, just the leftover cell walls in the cork."
+  },
+  { 
+    note: "Antonie van Leeuwenhoek, a Dutch shopkeeper, created incredibly powerful single-lens microscopes and was the first person to see living cells.",
+    explanation: "Leeuwenhoek made a game-changing microscope and looked at pond water. He was shocked to see tiny creatures swimming around! He called them 'animalcules'.",
+    quizTitle: "Antonie van Leeuwenhoek",
+    quizReasoning: "While Hooke saw dead cells, Leeuwenhoek's superior microscopes allowed him to be the first to witness and describe living bacteria."
+  },
+  // --- Cell Structures & Organelles ---
+  { 
+    note: "The Nucleolus: A dense structure found inside the nucleus responsible for producing ribosomes.",
+    explanation: "This is a tiny factory inside the main office (the nucleus). Its only job is to build the cell's protein-making machines (ribosomes).",
+    quizTitle: "Nucleolus",
+    quizReasoning: "Think 'Nucleolus makes ribosomes.' It's the starting point for protein production."
+  },
+  {
+    note: "Nuclear Pores: Small channels through the nuclear membrane that regulate the passage of molecules between the nucleus and cytoplasm.",
+    explanation: "These are the tiny doorways on the nucleus's wall. They let important messages and materials pass in and out of the cell's 'brain'.",
+    quizTitle: "Nuclear Pores",
+    quizReasoning: "These pores are crucial for communication, allowing RNA to exit the nucleus and proteins to enter."
+  },
+  { 
+    note: "The Cytoplasm is the jelly-like substance that fills the entire cell and surrounds all the organelles inside.",
+    explanation: "This is the gooey jelly that fills up the cell. All the other little cell parts are just floating around and doing their jobs in this stuff.",
+    quizTitle: "Cytoplasm",
+    quizReasoning: "The cytoplasm is more than just jelly; it's where many of the cell's metabolic chemical reactions happen."
+  },
+  { 
+    note: "Mitochondria are known as the 'powerhouses of the cell.' Their job is to convert nutrients into energy-rich molecules (ATP).",
+    explanation: "Think of this as the cell's battery charger! It takes the food the cell 'eats' and turns it into pure energy, called ATP, so everything else can get its job done.",
+    quizTitle: "Mitochondria",
+    quizReasoning: "Mitochondria's whole purpose is energy conversion. If a question is about cell power or ATP, mitochondria is the answer."
+  },
+  { 
+    note: "Ribosomes are tiny structures that build proteins. They can be found floating in the cytoplasm or attached to the Rough ER.",
+    explanation: "These are the construction workers of the cell! They get building plans from the nucleus and put together all the proteins the cell needs to function.",
+    quizTitle: "Ribosomes",
+    quizReasoning: "Ribosomes are essential for protein synthesis, translating the genetic code from RNA into a chain of amino acids."
+  },
+  { 
+    note: "The Rough Endoplasmic Reticulum (Rough ER) is a network of membranes studded with ribosomes that helps make and transport proteins.",
+    explanation: "This is a big factory assembly line that's covered in little worker ribosomes. It builds proteins and then folds them and sends them on their way.",
+    quizTitle: "Rough ER",
+    quizReasoning: "It's called 'rough' because the attached ribosomes give it a bumpy appearance under a microscope. Its function is tied to protein production."
+  },
+  { 
+    note: "The Smooth Endoplasmic Reticulum (Smooth ER) is a network of membranes that makes lipids (fats) and helps detoxify the cell.",
+    explanation: "This is a different kind of factory with no workers on it. Its job is to produce all the fats the cell needs and to clean up any harmful toxins.",
+    quizTitle: "Smooth ER",
+    quizReasoning: "It's called 'smooth' because it lacks ribosomes. Its main roles are lipid synthesis and detoxification, especially in liver cells."
+  },
+  { 
+    note: "The Golgi Apparatus is an organelle that modifies, sorts, and packages proteins and lipids into vesicles for delivery.",
+    explanation: "This is the cell's post office! It receives proteins, puts the finishing touches on them, packages them up, and ships them to where they need to go.",
+    quizTitle: "Golgi Apparatus",
+    quizReasoning: "The Golgi acts as the central sorting and shipping hub. Think 'packaging and processing' when you see this term."
+  },
+  { 
+    note: "Lysosomes are small vesicles filled with digestive enzymes. They break down waste, old cell parts, and invading bacteria.",
+    explanation: "These are the cell's recycling and garbage trucks! They are full of chemicals that dissolve trash, broken parts, and any germs that get inside.",
+    quizTitle: "Lysosomes",
+    quizReasoning: "Lysosomes are crucial for cellular cleanup and defense. 'Lyso-' means to split or dissolve, which is exactly what they do."
+  },
+  {
+    note: "Microtubules are hollow tubes that provide structural support (cytoskeleton) and act as 'railroad tracks' for moving organelles.",
+    explanation: "These are the cell's scaffolding and train tracks! They give the cell its shape and create paths for other parts to travel along.",
+    quizTitle: "Microtubules",
+    quizReasoning: "Think 'tubes' for structure and transport. They are the largest components of the cytoskeleton."
+  },
+  {
+    note: "Microvilli are finger-like extensions of the cell membrane that dramatically increase the surface area for absorption.",
+    explanation: "Imagine the cell has thousands of tiny little fingers sticking out. This gives it way more surface to grab onto and absorb nutrients, like in your gut!",
+    quizTitle: "Microvilli",
+    quizReasoning: "More surface area means faster and more efficient absorption of nutrients."
+  },
+  // --- Plant Cell Specifics ---
+  { 
+    note: "The Cell Wall is a rigid, protective outer layer found in plant cells. It provides structural support and shape.",
+    explanation: "Plants have a super tough wall outside their membrane. It's like a suit of armor that gives them their stiff shape and keeps them from bursting.",
+    quizTitle: "Cell Wall",
+    quizReasoning: "This is a key difference between plant and animal cells. The cell wall provides the structural support that plants need to grow upright."
+  },
+  { 
+    note: "A large Central Vacuole is a prominent feature of plant cells. It stores water, nutrients, and waste, and maintains pressure.",
+    explanation: "Plants have a giant water balloon in the middle of their cells. It holds water and pushes against the cell wall, which is how plants stay firm and not wilted!",
+    quizTitle: "Large Central Vacuole",
+    quizReasoning: "The pressure from the vacuole (turgor pressure) is vital for a plant's structural integrity."
+  },
+  { 
+    note: "Chloroplasts are the organelles in plant cells where photosynthesis happens. They contain the green pigment chlorophyll.",
+    explanation: "These are the tiny, solar-powered sugar kitchens inside plant cells! They use sunlight, water, and air to cook up food for the plant.",
+    quizTitle: "Chloroplasts",
+    quizReasoning: "Chloroplasts are the site of photosynthesis. Their green color comes from chlorophyll, the molecule that captures light energy."
+  },
+  {
+    note: "Chromoplasts are plastids that produce and store colorful pigments, giving bright colors to fruits, flowers, and autumn leaves.",
+    explanation: "These are the plant's paint buckets! They are filled with red, yellow, and orange colors to make flowers pretty for bees and fruits look tasty.",
+    quizTitle: "Chromoplasts",
+    quizReasoning: "'Chromo' means color. Their job is to create colors that attract animals for pollination and seed dispersal."
+  },
+  // --- Cellular Transport ---
+  { 
+    note: "Passive Transport is the movement of molecules from a high concentration to a low concentration area. It does not require energy.",
+    explanation: "This is when stuff moves across the cell membrane without any effort. It naturally flows from where it's crowded to where it's less crowded, like rolling downhill.",
+    quizTitle: "Passive Transport",
+    quizReasoning: "'Passive' means no energy is used. The movement happens automatically due to the concentration gradient."
+  },
+  { 
+    note: "Osmosis is the special term for the passive transport of water across a semipermeable membrane.",
+    explanation: "This is just about water moving. Water will always travel to the area that has more 'stuff' dissolved in it, trying to balance things out.",
+    quizTitle: "Osmosis",
+    quizReasoning: "Osmosis is a specific type of diffusion, but it only describes the movement of water. It's crucial for water balance in cells."
+  },
+  {
+    note: "Tonicity compares solute concentrations. Hypotonic solutions cause cells to swell, Hypertonic solutions cause them to shrink.",
+    explanation: "It's about how salty the water is outside a cell. Too little salt outside (Hypotonic) and water rushes in. Too much salt outside (Hypertonic) and water rushes out!",
+    quizTitle: "Hypotonic vs. Hypertonic",
+    quizReasoning: "Water always moves via osmosis from a hypotonic (lower solute) environment to a hypertonic (higher solute) one."
+  },
+  { 
+    note: "Active Transport is a process that moves molecules from a low to a high concentration area. This requires the cell to spend energy (ATP).",
+    explanation: "Imagine trying to shove more people into a super crowded room. It's hard work! The cell has to use its energy (ATP) to force molecules where they don't naturally want to go.",
+    quizTitle: "Active Transport",
+    quizReasoning: "'Active' means it needs energy. This process moves molecules against their natural flow, from less crowded to more crowded."
+  },
+  { 
+    note: "Endocytosis is when a cell takes in large material by having its membrane wrap around the particle and pull it inside in a vesicle.",
+    explanation: "This is how a cell 'eats' big things. Its membrane gives the particle a big hug, pulls it inside, and pinches off to form a little bubble.",
+    quizTitle: "Endocytosis",
+    quizReasoning: "'Endo' means 'inward.' This is the general term for bringing large quantities of material INTO the cell."
+  },
+  { 
+    note: "Exocytosis is when a cell releases large material. A vesicle fuses with the cell membrane and expels its contents.",
+    explanation: "This is how a cell 'spits out' big stuff, like waste or hormones. A bubble carrying the material merges with the cell's outer edge and lets everything go.",
+    quizTitle: "Exocytosis",
+    quizReasoning: "'Exo' means 'outward.' This is the process for exporting large molecules or particles OUT of the cell."
+  },
+  { 
+    note: "Phagocytosis, or 'cell eating,' is a type of endocytosis where a cell engulfs a large, solid particle.",
+    explanation: "This is the specific name for when a cell eats a solid snack, like a bacterium or a piece of cellular debris. Nom nom!",
+    quizTitle: "Phagocytosis",
+    quizReasoning: "'Phago' means 'to eat.' This is a key process for immune cells that gobble up pathogens."
+  },
+  { 
+    note: "Pinocytosis, or 'cell drinking,' is a type of endocytosis where a cell takes in small droplets of extracellular fluid.",
+    explanation: "This is the specific name for when a cell takes a tiny sip of the liquid outside of it, just to see what's out there. Gulp!",
+    quizTitle: "Pinocytosis",
+    quizReasoning: "'Pino' means 'to drink.' The cell isn't thirsty; it's using this process to absorb dissolved nutrients from its surroundings."
+  }
+];
+
+// --- CORE LOGIC (Flashcards) ---
+// --- FIX --- highestZ now starts based on the number of cards to work with the initial z-index setting.
+let highestZ = flashcardData.length;
+
+class PaperDragger {
+  constructor(paper, index) {
+    this.paper = paper;
+    this.isDragging = false;
+    this.hasMoved = false;
+
+    const NUM_TOP_NOTES = 3;
+    if (index < NUM_TOP_NOTES) {
+      const cardWidth = 280; 
+      const spacing = 20;
+      const totalWidth = (NUM_TOP_NOTES * cardWidth) + ((NUM_TOP_NOTES - 1) * spacing);
+      const startX = (window.innerWidth - totalWidth) / 2;
+      
+      this.currentX = startX + (index * (cardWidth + spacing));
+      this.currentY = 40;
+      this.rotation = 0;
+    } else {
+      const rect = paper.getBoundingClientRect();
+      const centerX = window.innerWidth / 2 - rect.width / 2;
+      const centerY = window.innerHeight / 2 - rect.height / 2;
+      const offsetX = Math.random() * (window.innerWidth * 0.4) - (window.innerWidth * 0.2);
+      const offsetY = Math.random() * (window.innerHeight * 0.4) - (window.innerHeight * 0.2);
+
+      this.currentX = centerX + offsetX;
+      this.currentY = centerY + offsetY;
+      this.rotation = Math.random() * 20 - 10;
+    }
+
+    this.startX = 0;
+    this.startY = 0;
+    this.init();
+  }
+
+  init() {
+    this.paper.style.transform = `translateX(${this.currentX}px) translateY(${this.currentY}px) rotate(${this.rotation}deg)`;
+    
+    this.onStart = this.onStart.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onEnd = this.onEnd.bind(this);
+
+    this.paper.addEventListener('mousedown', this.onStart);
+    this.paper.addEventListener('touchstart', this.onStart, { passive: false });
+  }
+
+  onStart(e) {
+    e.preventDefault();
+    this.hasMoved = false;
+    this.isDragging = true;
+    
+    // This part now correctly brings any card to the absolute front when clicked.
+    this.paper.style.zIndex = ++highestZ;
+    this.paper.classList.add('grabbing');
+
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+    this.startX = clientX - this.currentX;
+    this.startY = clientY - this.currentY;
+
+    document.addEventListener('mousemove', this.onMove);
+    document.addEventListener('touchmove', this.onMove, { passive: false });
+    document.addEventListener('mouseup', this.onEnd);
+    document.addEventListener('touchend', this.onEnd);
+  }
+
+  onMove(e) {
+    if (!this.isDragging) return;
+    e.preventDefault();
+
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+    const newX = clientX - this.startX;
+    const newY = clientY - this.startY;
+    
+    if (!this.hasMoved && (Math.abs(newX - this.currentX) > 5 || Math.abs(newY - this.currentY) > 5)) {
+        this.hasMoved = true;
+    }
+
+    this.currentX = newX;
+    this.currentY = newY;
+    this.paper.style.transform = `translateX(${this.currentX}px) translateY(${this.currentY}px) rotate(${this.rotation}deg)`;
+  }
+
+  onEnd() {
+    if (!this.isDragging) return;
+    
+    if (!this.hasMoved) {
+      this.paper.classList.toggle('is-flipped');
+    }
+    
+    this.isDragging = false;
+    this.paper.classList.remove('grabbing');
+
+    document.removeEventListener('mousemove', this.onMove);
+    document.removeEventListener('touchmove', this.onMove);
+    document.removeEventListener('mouseup', this.onEnd);
+    document.removeEventListener('touchend', this.onEnd);
+  }
+}
+
+// --- IMPROVED QUIZ LOGIC ---
+const quizModal = document.getElementById('quiz-modal');
+const quizCloseBtn = document.getElementById('quiz-close-btn');
+const questionText = document.getElementById('quiz-question-text');
+const optionsContainer = document.getElementById('quiz-options-container');
+const feedbackContainer = document.getElementById('quiz-feedback-container');
+const quizActionsContainer = document.getElementById('quiz-actions-container');
+let correctAnswerInfo = null;
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function showRandomQuestion() {
+  feedbackContainer.innerHTML = '';
+  feedbackContainer.classList.remove('show');
+  quizActionsContainer.innerHTML = '';
+  optionsContainer.classList.remove('answered');
+
+  const questionItem = flashcardData[Math.floor(Math.random() * flashcardData.length)];
+  correctAnswerInfo = questionItem;
+
+  const distractors = flashcardData
+    .filter(item => item.quizTitle !== correctAnswerInfo.quizTitle)
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 3);
+  
+  const options = [correctAnswerInfo, ...distractors];
+  shuffleArray(options);
+  
+  questionText.textContent = correctAnswerInfo.explanation;
+  optionsContainer.innerHTML = '';
+  options.forEach(option => {
+    const button = document.createElement('div');
+    button.className = 'quiz-option';
+    button.textContent = option.quizTitle;
+    button.addEventListener('click', handleOptionClick);
+    optionsContainer.appendChild(button);
+  });
+  
+  quizModal.classList.add('show');
+}
+
+function handleOptionClick(e) {
+  const selectedOption = e.target;
+  const isCorrect = selectedOption.textContent === correctAnswerInfo.quizTitle;
+  
+  optionsContainer.classList.add('answered');
+  Array.from(optionsContainer.children).forEach(btn => {
+    btn.removeEventListener('click', handleOptionClick);
+    if (btn.textContent === correctAnswerInfo.quizTitle) {
+        btn.classList.add('correct');
+    }
+  });
+
+  let feedbackHTML = '';
+  if (isCorrect) {
+    selectedOption.classList.add('correct');
+    feedbackHTML = `<span class="quiz-feedback-result correct">That's Right! 🎉</span>`;
+  } else {
+    selectedOption.classList.add('wrong');
+    feedbackHTML = `<span class="quiz-feedback-result wrong">Not quite!</span>`;
+  }
+  
+  feedbackHTML += `<div class="quiz-feedback-reason">${correctAnswerInfo.quizReasoning}</div>`;
+  feedbackContainer.innerHTML = feedbackHTML;
+  setTimeout(() => feedbackContainer.classList.add('show'), 10);
+  
+  const nextButton = document.createElement('button');
+  nextButton.id = 'next-question-btn';
+  nextButton.textContent = 'Next Question ➡️';
+  nextButton.addEventListener('click', showRandomQuestion);
+  quizActionsContainer.appendChild(nextButton);
+}
+
+function closeQuizModal() {
+    quizModal.classList.remove('show');
+}
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+  const cardContainer = document.getElementById('card-container');
+
+  flashcardData.forEach((item, index) => { 
+    const paper = document.createElement('div');
+    paper.className = 'paper';
+    
+    // --- FIX --- This sets the initial stacking order. The first card (index 0) gets the highest z-index.
+    paper.style.zIndex = flashcardData.length - index;
+    
+    paper.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front"><p>${item.note}</p></div>
+        <div class="card-back"><p>${item.explanation}</p></div>
+      </div>
+    `;
+    cardContainer.appendChild(paper);
+    new PaperDragger(paper, index);
+  });
+  
+  document.getElementById('random-q-btn').addEventListener('click', showRandomQuestion);
+  quizCloseBtn.addEventListener('click', closeQuizModal);
+  quizModal.addEventListener('click', (e) => {
+    if(e.target === quizModal) closeQuizModal();
+  });
+
+  const aboutBtn = document.getElementById('about-btn');
+  const aboutModal = document.getElementById('about-modal');
+  aboutBtn.addEventListener('click', () => {
+    aboutModal.classList.add('show');
+  });
+  aboutModal.addEventListener('click', (e) => {
+    if (e.target === aboutModal) {
+      aboutModal.classList.remove('show');
+    }
+  });
+
+  window.addEventListener("load", () => {
+    document.body.classList.add("loaded");
+    const papers = Array.from(document.querySelectorAll('.paper'));
+    papers.forEach((paper, index) => {
+      setTimeout(() => {
+        paper.classList.add('show');
+      }, 100 * (index + 1));
+    });
+  });
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+});
+</script>
+
+</body>
+</html>
